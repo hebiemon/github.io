@@ -10,6 +10,7 @@ Hebiemonと申します。
 ## Links
 - [Twitter](https://twitter.com/Hebiemon)
 - [GitHub](https://github.com/hebiemon)
+- [同志社大学SF研究会　ホームページ](https://doshishasfa.netlify.app/)
 
 ## About
 同志社大学理工学部環境システム学科4回生(2024年度)  
