@@ -6,8 +6,11 @@ image: ./logo.png
 categories: main
 ---
 # hebiemonのホームページへようこそ
-[Twitter](https://twitter.com/Hebiemon)
 Hebiemonと申します。  
+## Links
+- [Twitter](https://twitter.com/Hebiemon)
+- [GitHub](https://github.com/hebiemon)
+
 ## About
 同志社大学理工学部環境システム学科4回生(2024年度)  
 同志社大学数理環境研究科新エネルギーシステム研究室B4(2024年度)  
@@ -16,11 +19,20 @@ Hebiemonと申します。
 同志社大学SF研究会 会計(2024年度)  
 
 ## 興味
-- 反応拡散系
-- セル・オートマトン
-- Transformer言語モデル
-- 高温溶融塩電解
-- 解析力学
+- 化学
+  - 熱力学
+    - 復習中
+  - 高温溶融塩電解
+    - 月レゴリスin situ電解
+  - 電気化学
+    - アリの巣腐食
+- 宇宙開発
+- 地球科学
+- 計算機科学
+  - 反応拡散系
+  - セル・オートマトン
+  - Transformer言語モデル
+
 
 ## 趣味
 - イラスト
