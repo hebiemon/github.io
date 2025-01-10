@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>高速化された反応拡散系</title>
+  <style>
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Canvasサイズの設定
+    canvas.width = 400;
+    canvas.height = 400;
+
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // シミュレーションのパラメータ
+    const diffusionRateU = 1.0; // U成分の拡散係数
+    const diffusionRateV = 0.2; // V成分の拡散係数
+    const feedRate = 0.07; // 供給率
+    const killRate = 0.08; // 消滅率
+    const dt = 0.8; // 時間ステップ
+
+    // グリッドの初期化
+    const grid = new Float32Array(width * height * 2); // 格子データ (UとVを1次元配列に格納)
+    const nextGrid = new Float32Array(width * height * 2);
+
+    // 初期条件: ランダムなV成分を中央付近に設定
+    function initializeGrid() {
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          const index = (x + y * width) * 2;
+          grid[index] = 1; // U
+          grid[index + 1] = 0; // V
+        }
+      }
+      for (let x = 180; x < 220; x++) {
+        for (let y = 180; y < 220; y++) {
+          const index = (x + y * width) * 2;
+          grid[index + 1] = Math.random(); // 中央にV成分を追加
+        }
+      }
+    }
+
+    // ラプラシアン計算
+    function laplace(x, y, componentOffset) {
+      const index = (x + y * width) * 2 + componentOffset;
+      const neighbors =
+        grid[((x + 1 + width) % width + y * width) * 2 + componentOffset] +
+        grid[((x - 1 + width) % width + y * width) * 2 + componentOffset] +
+        grid[(x + ((y + 1 + height) % height) * width) * 2 + componentOffset] +
+        grid[(x + ((y - 1 + height) % height) * width) * 2 + componentOffset];
+      const corners =
+        grid[
+          ((x + 1 + width) % width + ((y + 1 + height) % height) * width) * 2 +
+            componentOffset
+        ] +
+        grid[
+          ((x - 1 + width) % width + ((y - 1 + height) % height) * width) * 2 +
+            componentOffset
+        ] +
+        grid[
+          ((x + 1 + width) % width + ((y - 1 + height) % height) * width) * 2 +
+            componentOffset
+        ] +
+        grid[
+          ((x - 1 + width) % width + ((y + 1 + height) % height) * width) * 2 +
+            componentOffset
+        ];
+
+      return (
+        -grid[index] + 0.2 * neighbors + 0.05 * corners
+      );
+    }
+
+    // シミュレーションループ
+    function update() {
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          const index = (x + y * width) * 2;
+          const u = grid[index];
+          const v = grid[index + 1];
+          const lapU = laplace(x, y, 0);
+          const lapV = laplace(x, y, 1);
+
+          // 反応拡散方程式
+          nextGrid[index] =
+            u +
+            (diffusionRateU * lapU - u * v * v + feedRate * (1 - u)) * dt;
+          nextGrid[index + 1] =
+            v +
+            (diffusionRateV * lapV + u * v * v - (killRate + feedRate) * v) *
+              dt;
+        }
+      }
+
+      // グリッドを更新
+      const temp = grid;
+      grid.set(nextGrid);
+      nextGrid.set(temp);
+    }
+
+    // 描画
+    function draw() {
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          const index = (x + y * width) * 2;
+          const color = Math.floor((grid[index] - grid[index + 1]) * 255);
+          const pixelIndex = (x + y * width) * 4;
+
+          data[pixelIndex] = color; // R
+          data[pixelIndex + 1] = color; // G
+          data[pixelIndex + 2] = color; // B
+          data[pixelIndex + 3] = 255; // Alpha
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    // クリックイベントで点を追加
+    canvas.addEventListener('click', (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = Math.floor(event.clientX - rect.left);
+      const mouseY = Math.floor(event.clientY - rect.top);
+
+      const radius = 10; // 点の半径
+      for (let x = -radius; x <= radius; x++) {
+        for (let y = -radius; y <= radius; y++) {
+          const dist = Math.sqrt(x * x + y * y);
+          if (dist <= radius) {
+            const gridX = (mouseX + x + width) % width;
+            const gridY = (mouseY + y + height) % height;
+            const index = (gridX + gridY * width) * 2;
+            grid[index + 1] = 1; // V成分を高くする
+          }
+        }
+      }
+    });
+
+    // アニメーションループ
+    function animate() {
+      update();
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    // 初期化と開始
+    initializeGrid();
+    animate();
+  </script>
+</body>
+</html>
