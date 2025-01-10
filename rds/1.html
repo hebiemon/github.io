@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>一次元反応拡散系</title>
+  <style>
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Canvasサイズの設定
+    canvas.width = 800; // 横幅
+    canvas.height = 400; // 縦幅
+
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // シミュレーションのパラメータ
+
+    const diffusionRateU = 0.5; // U成分の拡散係数
+    const diffusionRateV = 0.05; // V成分の拡散係数
+    const feedRate = 0.05; // 供給率
+    const killRate = 0.06; // 消滅率
+    const dt = 0.5; // 時間ステップ
+
+    // const diffusionRateU = 1.0; // U成分の拡散係数
+    // const diffusionRateV = 0.5; // V成分の拡散係数
+    // const feedRate = 0.055; // 供給率
+    // const killRate = 0.062; // 消滅率
+    // const dt = 1.0; // 時間ステップ
+
+    // グリッドの初期化
+    const size = 200; // 1次元グリッドの長さ
+    const u = new Float32Array(size).fill(1); // U成分
+    const v = new Float32Array(size).fill(0); // V成分
+    const nextU = new Float32Array(size);
+    const nextV = new Float32Array(size);
+
+    // 初期条件: 中央付近にV成分を設定
+    for (let i = size / 2 - 10; i < size / 2 + 10; i++) {
+      v[i] = Math.random();
+    }
+
+    // ラプラシアン計算
+    function laplace(arr, i) {
+      const left = arr[(i - 1 + size) % size];
+      const right = arr[(i + 1) % size];
+      return left - 2 * arr[i] + right;
+    }
+
+    // シミュレーション更新
+    function update() {
+      for (let i = 0; i < size; i++) {
+        const lu = laplace(u, i);
+        const lv = laplace(v, i);
+
+        // 反応拡散方程式
+        nextU[i] =
+          u[i] + (diffusionRateU * lu - u[i] * v[i] * v[i] + feedRate * (1 - u[i])) * dt;
+        nextV[i] =
+          v[i] + (diffusionRateV * lv + u[i] * v[i] * v[i] - (killRate + feedRate) * v[i]) * dt;
+      }
+
+      // グリッドを更新
+      u.set(nextU);
+      v.set(nextV);
+    }
+
+    // 折れ線グラフ描画
+    function draw() {
+      ctx.clearRect(0, 0, width, height); // キャンバスをクリア
+
+      // U成分の描画
+      ctx.beginPath();
+      ctx.strokeStyle = 'blue';
+      for (let i = 0; i < size; i++) {
+        const x = (i / size) * width;
+        const y = height - u[i] * height;
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.stroke();
+
+      // V成分の描画
+      ctx.beginPath();
+      ctx.strokeStyle = 'red';
+      for (let i = 0; i < size; i++) {
+        const x = (i / size) * width;
+        const y = height - v[i] * height;
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.stroke();
+    }
+
+    // アニメーションループ
+    function animate() {
+      update();
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    // アニメーション開始
+    animate();
+  </script>
+</body>
+</html>
