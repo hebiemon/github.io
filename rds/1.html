@@ -27,10 +27,12 @@
 
     // シミュレーションのパラメータ
 
-    const diffusionRateU = 0.5; // U成分の拡散係数
-    const diffusionRateV = 0.05; // V成分の拡散係数
-    const feedRate = 0.05; // 供給率
-    const killRate = 0.06; // 消滅率
+    const D_u = 0.5; // U成分の拡散係数
+    const D_v = 0.05; // V成分の拡散係数
+
+    
+
+ 
     const dt = 0.5; // 時間ステップ
 
     // const diffusionRateU = 1.0; // U成分の拡散係数
@@ -41,14 +43,14 @@
 
     // グリッドの初期化
     const size = 200; // 1次元グリッドの長さ
-    const u = new Float32Array(size).fill(1); // U成分
+    const u = new Float32Array(size).fill(0.1); // U成分
     const v = new Float32Array(size).fill(0); // V成分
     const nextU = new Float32Array(size);
     const nextV = new Float32Array(size);
 
     // 初期条件: 中央付近にV成分を設定
     for (let i = size / 2 - 10; i < size / 2 + 10; i++) {
-      v[i] = Math.random();
+      v[i] = 0.2;
     }
 
     // ラプラシアン計算
@@ -58,6 +60,11 @@
       return left - 2 * arr[i] + right;
     }
 
+    function adjustArray(arr) {
+  // 配列内の負の値を0に置き換える
+  return arr.map(value => Math.max(0, value));
+}
+
     // シミュレーション更新
     function update() {
       for (let i = 0; i < size; i++) {
@@ -66,10 +73,23 @@
 
         // 反応拡散方程式
         nextU[i] =
-          u[i] + (diffusionRateU * lu - u[i] * v[i] * v[i] + feedRate * (1 - u[i])) * dt;
+          u[i] + (D_u * lu - u[i] * v[i] * v[i] + 0.1 * (0.1 - u[i]))  * dt;
         nextV[i] =
-          v[i] + (diffusionRateV * lv + u[i] * v[i] * v[i] - (killRate + feedRate) * v[i]) * dt;
+          v[i] + (D_v * lv + u[i] * v[i] * v[i]*8 - 0.12 * v[i]) * dt;
+
+      
+
+          
+        // // 反応拡散方程式
+        // nextU[i] =
+        //   u[i] + (D_u * lu - u[i] * v[i] * v[i] + feedRate * (1 - u[i])) * dt;
+        // nextV[i] =
+        //   v[i] + (D_v * lv + u[i] * v[i] * v[i] - (killRate + feedRate) * v[i]) * dt;
+  
+
       }
+      // nextU = adjustArray(nextU)
+      // nextV = adjustArray(nextU)
 
       // グリッドを更新
       u.set(nextU);
